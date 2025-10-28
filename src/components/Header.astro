@@ -1,0 +1,41 @@
+---
+import { getLangFromUrl, useTranslations, getLocalizedPath } from '../i18n/utils';
+import LanguagePicker from './LanguagePicker.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<header class="bg-white shadow-sm border-b-4 border-warning-500">
+  <div class="max-w-6xl mx-auto px-4 py-8 text-center">
+    <!-- Language Picker -->
+    <div class="flex justify-end mb-4">
+      <LanguagePicker />
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="mb-6">
+      <div class="flex justify-center space-x-8">
+        <a href={getLocalizedPath('/', lang)} class="text-gray-700 hover:text-warning-600 font-medium transition-colors">
+          🏠 {t('nav.home')}
+        </a>
+        <a href={getLocalizedPath('/articles', lang)} class="text-gray-700 hover:text-warning-600 font-medium transition-colors">
+          📚 {t('nav.articles')}
+        </a>
+        <a href={getLocalizedPath('/#resources', lang)} class="text-gray-700 hover:text-warning-600 font-medium transition-colors">
+          🆘 {t('nav.help')}
+        </a>
+      </div>
+    </nav>
+    
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+      🎰 {t('site.title')}
+    </h1>
+    <p class="text-xl md:text-2xl text-warning-600 font-medium mb-2">
+      {t('site.subtitle')}
+    </p>
+    <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+      {t('site.description')}
+    </p>
+  </div>
+</header>

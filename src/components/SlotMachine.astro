@@ -1,0 +1,238 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<section class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+  <h2 class="text-2xl font-bold text-center mb-6 text-gray-900">
+    {t('slot.title')}
+  </h2>
+  
+  <div class="max-w-md mx-auto">
+    <!-- Probability Slider -->
+    <div class="mb-8">
+      <label for="probability-slider" class="block text-sm font-medium text-gray-700 mb-3">
+        {t('slot.probability')}: <span id="probability-display" class="font-bold text-primary-600">1.0%</span>
+      </label>
+      <input 
+        type="range" 
+        id="probability-slider" 
+        min="0.0001" 
+        max="50" 
+        step="0.0001" 
+        value="1"
+        class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+      />
+      <div class="flex justify-between text-xs text-gray-500 mt-1">
+        <span>0.0001%</span>
+        <span>50%</span>
+      </div>
+    </div>
+
+    <!-- Slot Display -->
+    <div class="bg-gray-900 rounded-lg p-6 mb-6">
+      <div class="flex justify-center space-x-4 mb-4">
+        <div class="slot-reel bg-white rounded-lg w-16 h-16 flex items-center justify-center text-3xl" id="reel1">🍒</div>
+        <div class="slot-reel bg-white rounded-lg w-16 h-16 flex items-center justify-center text-3xl" id="reel2">🍋</div>
+        <div class="slot-reel bg-white rounded-lg w-16 h-16 flex items-center justify-center text-3xl" id="reel3">🍊</div>
+      </div>
+      
+      <!-- Result Display -->
+      <div id="result-display" class="text-center text-white text-xl font-bold mb-4 h-8">
+        {t('slot.ready')}
+      </div>
+    </div>
+
+    <!-- Spin Button -->
+    <button 
+      id="spin-button" 
+      class="w-full bg-warning-500 hover:bg-warning-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors duration-200 mb-6"
+      data-spin-text={t('slot.spin')}
+      data-spin-again-text={t('slot.spin_again')}
+      data-spinning-text={t('slot.spinning')}
+    >
+      🎰 {t('slot.spin')}
+    </button>
+
+    <!-- Statistics -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-900 mb-3">{t('slot.results')}:</h3>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <div id="total-spins" class="text-2xl font-bold text-gray-900">0</div>
+          <div class="text-sm text-gray-600">{t('slot.total_spins')}</div>
+        </div>
+        <div>
+          <div id="total-wins" class="text-2xl font-bold text-success-600">0</div>
+          <div class="text-sm text-gray-600">{t('slot.wins')}</div>
+        </div>
+        <div>
+          <div id="total-losses" class="text-2xl font-bold text-danger-600">0</div>
+          <div class="text-sm text-gray-600">{t('slot.losses')}</div>
+        </div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-200">
+        <div class="text-center">
+          <div id="win-rate" class="text-lg font-bold text-gray-900">0.0%</div>
+          <div class="text-sm text-gray-600">{t('slot.win_rate')}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const probabilitySlider = document.getElementById('probability-slider');
+    const probabilityDisplay = document.getElementById('probability-display');
+    const spinButton = document.getElementById('spin-button');
+    const resultDisplay = document.getElementById('result-display');
+    const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+    
+    // Get translated text from button data attributes
+    const spinText = spinButton.dataset.spinText;
+    const spinAgainText = spinButton.dataset.spinAgainText;
+    const spinningText = spinButton.dataset.spinningText;
+    
+    // Statistics elements
+    const totalSpinsEl = document.getElementById('total-spins');
+    const totalWinsEl = document.getElementById('total-wins');
+    const totalLossesEl = document.getElementById('total-losses');
+    const winRateEl = document.getElementById('win-rate');
+
+    // Game state
+    let totalSpins = 0;
+    let totalWins = 0;
+    let totalLosses = 0;
+    
+    // Slot symbols
+    const symbols = ['🍒', '🍋', '🍊', '⭐', '💎', '🔔', '7️⃣'];
+    
+    // Update probability display
+    probabilitySlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      probabilityDisplay.textContent = value.toFixed(4) + '%';
+    });
+
+    // Spin animation
+    function animateReels() {
+      let animationCount = 0;
+      const maxAnimations = 20;
+      
+      const interval = setInterval(() => {
+        reels.forEach(reel => {
+          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+          reel.textContent = randomSymbol;
+          reel.classList.add('animate-bounce-subtle');
+        });
+        
+        animationCount++;
+        if (animationCount >= maxAnimations) {
+          clearInterval(interval);
+          setTimeout(() => {
+            reels.forEach(reel => reel.classList.remove('animate-bounce-subtle'));
+            showResult();
+          }, 500);
+        }
+      }, 100);
+    }
+
+    // Show spin result
+    function showResult() {
+      const winProbability = parseFloat(probabilitySlider.value);
+      const randomNumber = Math.random() * 100;
+      const isWin = randomNumber <= winProbability;
+      
+      totalSpins++;
+      
+      if (isWin) {
+        // Show winning combination
+        const winSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+        reels.forEach(reel => reel.textContent = winSymbol);
+        resultDisplay.textContent = '🎉 ' + (document.documentElement.lang === 'en' ? 'YOU WON!' : 
+          document.documentElement.lang === 'es' ? '¡GANASTE!' :
+          document.documentElement.lang === 'ko' ? '당첨!' :
+          document.documentElement.lang === 'ja' ? '勝利!' :
+          document.documentElement.lang === 'de' ? 'SIE HABEN GEWONNEN!' : 'YOU WON!') + ' 🎉';
+        resultDisplay.className = 'text-center text-success-400 text-xl font-bold mb-4 h-8 animate-pulse-warning';
+        totalWins++;
+      } else {
+        // Show losing combination (make sure they're different)
+        reels.forEach((reel, index) => {
+          let symbol;
+          do {
+            symbol = symbols[Math.floor(Math.random() * symbols.length)];
+          } while (index > 0 && symbol === reels[index - 1].textContent);
+          reel.textContent = symbol;
+        });
+        resultDisplay.textContent = '❌ ' + (document.documentElement.lang === 'en' ? 'No match - Try again' : 
+          document.documentElement.lang === 'es' ? 'Sin coincidencia - Inténtalo de nuevo' :
+          document.documentElement.lang === 'ko' ? '일치하지 않음 - 다시 시도하세요' :
+          document.documentElement.lang === 'ja' ? '一致なし - もう一度お試しください' :
+          document.documentElement.lang === 'de' ? 'Keine Übereinstimmung - Versuchen Sie es erneut' : 'No match - Try again');
+        resultDisplay.className = 'text-center text-danger-400 text-xl font-bold mb-4 h-8';
+        totalLosses++;
+      }
+      
+      // Update statistics
+      updateStats();
+      spinButton.disabled = false;
+      spinButton.textContent = '🎰 ' + spinAgainText;
+    }
+
+    // Update statistics display
+    function updateStats() {
+      totalSpinsEl.textContent = totalSpins.toString();
+      totalWinsEl.textContent = totalWins.toString();
+      totalLossesEl.textContent = totalLosses.toString();
+      
+      const actualWinRate = totalSpins > 0 ? (totalWins / totalSpins * 100) : 0;
+      winRateEl.textContent = actualWinRate.toFixed(2) + '%';
+    }
+
+    // Spin button click handler
+    spinButton.addEventListener('click', function() {
+      if (this.disabled) return;
+      
+      this.disabled = true;
+      this.textContent = spinningText;
+      resultDisplay.textContent = '';
+      resultDisplay.className = 'text-center text-white text-xl font-bold mb-4 h-8';
+      
+      animateReels();
+    });
+  });
+</script>
+
+<style>
+  .slider {
+    background: linear-gradient(to right, #ef4444 0%, #f97316 50%, #22c55e 100%);
+  }
+  
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #3b82f6;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  .slider::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #3b82f6;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  .slot-reel {
+    transition: transform 0.1s ease-in-out;
+  }
+</style>

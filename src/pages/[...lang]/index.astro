@@ -1,0 +1,47 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import SlotMachine from '../../components/SlotMachine.astro';
+import Education from '../../components/Education.astro';
+import Articles from '../../components/Articles.astro';
+import Warnings from '../../components/Warnings.astro';
+import Resources from '../../components/Resources.astro';
+import Footer from '../../components/Footer.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+import { languages } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return Object.keys(languages)
+    .filter((lang) => lang !== 'en')
+    .map((lang) => ({
+      params: { lang },
+    }));
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<Layout
+  title={t('site.title')}
+  description={t('site.description')}
+  keywords={[
+    'slot machine simulator',
+    'gambling simulator',
+    'betting odds calculator',
+    'casino mathematics',
+    'gambling statistics'
+  ]}
+>
+  <Header />
+  
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <SlotMachine />
+    <Education />
+    <Articles />
+    <Warnings />
+    <Resources />
+  </main>
+  
+  <Footer />
+</Layout>

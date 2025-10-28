@@ -1,0 +1,206 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import { getLangFromUrl, useTranslations, getLocalizedPath } from '../../../i18n/utils';
+import { languages } from '../../../i18n/ui';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  const paths = [];
+  
+  for (const lang of Object.keys(languages)) {
+    for (const article of articles) {
+      paths.push({
+        params: { 
+          lang: lang === 'en' ? undefined : lang,
+          slug: article.slug 
+        },
+        props: article,
+      });
+    }
+  }
+  
+  return paths;
+}
+
+const article = Astro.props;
+const { Content } = await article.render();
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<Layout
+  title={`${article.data.title} - ${t('site.title')}`}
+  description={article.data.description}
+  article={true}
+  publishDate={article.data.publishDate}
+  author={article.data.author}
+  keywords={article.data.tags}
+>
+  <div class="bg-white">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-12">
+      <div class="max-w-4xl mx-auto px-4">
+        <div class="text-center">
+          <a href={getLocalizedPath('/', lang)} class="inline-flex items-center text-primary-100 hover:text-white mb-4 text-sm">
+            ← {t('nav.home')}
+          </a>
+          <h1 class="text-3xl md:text-4xl font-bold mb-4">
+            {article.data.title}
+          </h1>
+          <p class="text-xl text-primary-100 mb-6 max-w-3xl mx-auto">
+            {article.data.description}
+          </p>
+          <div class="flex items-center justify-center space-x-6 text-sm text-primary-200">
+            <span>By {article.data.author}</span>
+            <span>•</span>
+            <span>{article.data.publishDate.toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Article Content -->
+    <main class="max-w-4xl mx-auto px-4 py-12">
+      <article class="prose prose-lg max-w-none">
+        <Content />
+      </article>
+
+      <!-- Tags -->
+      {article.data.tags.length > 0 && (
+        <div class="mt-12 pt-8 border-t border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Tags:</h3>
+          <div class="flex flex-wrap gap-2">
+            {article.data.tags.map((tag) => (
+              <span class="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Warning Box -->
+      <div class="mt-12 p-6 bg-warning-50 border-2 border-warning-300 rounded-xl">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-warning-800 mb-2">⚠️ Remember</h3>
+          <p class="text-warning-700">
+            This content is educational only. We do not promote or provide access to gambling. 
+            If you're struggling with gambling addiction, please seek professional help.
+          </p>
+          <div class="mt-4">
+            <a 
+              href={getLocalizedPath('/#resources', lang)} 
+              class="inline-flex items-center text-warning-700 hover:text-warning-800 font-medium"
+            >
+              View Help Resources →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back to Home -->
+      <div class="mt-12 text-center">
+        <a 
+          href={getLocalizedPath('/', lang)} 
+          class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          ← {t('nav.home')}
+        </a>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .prose {
+    color: #374151;
+    line-height: 1.75;
+  }
+  
+  .prose h1 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 2.25rem;
+    margin-top: 0;
+    margin-bottom: 2rem;
+  }
+  
+  .prose h2 {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 1.875rem;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose h3 {
+    color: #374151;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .prose h4 {
+    color: #374151;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .prose p {
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose ul, .prose ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+  
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose strong {
+    color: #1f2937;
+    font-weight: 600;
+  }
+  
+  .prose em {
+    font-style: italic;
+  }
+  
+  .prose code {
+    background-color: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  }
+  
+  .prose pre {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+  
+  .prose blockquote {
+    border-left: 4px solid #3b82f6;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: #6b7280;
+  }
+</style>
+</Layout>
