@@ -1,5 +1,7 @@
 # The Real Odds
 
+![](/public/therealodds.png)
+
 An educational website demonstrating the real mathematics and psychology behind gambling. Built with Astro and designed to help people understand why the odds are always against them.
 
 ## Features
