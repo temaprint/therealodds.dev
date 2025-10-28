@@ -3,6 +3,9 @@ dist/
 
 # generated types
 .astro/
+.bolt/
+.vscode/
+.codesandbox/
 
 # dependencies
 node_modules/
